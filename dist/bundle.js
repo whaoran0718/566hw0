@@ -122,19 +122,6 @@ function equals(a, b) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return gl; });
-/* harmony export (immutable) */ __webpack_exports__["b"] = setGL;
-var gl;
-function setGL(_gl) {
-    gl = _gl;
-}
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__gl_matrix_common_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__gl_matrix_mat2_js__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__gl_matrix_mat2d_js__ = __webpack_require__(23);
@@ -166,6 +153,19 @@ function setGL(_gl) {
 
 
 
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return gl; });
+/* harmony export (immutable) */ __webpack_exports__["b"] = setGL;
+var gl;
+function setGL(_gl) {
+    gl = _gl;
+}
 
 
 /***/ }),
@@ -233,7 +233,7 @@ function invert(out, a) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(2);
 
 class Drawable {
     constructor() {
@@ -5955,7 +5955,7 @@ function determinant(a) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_stats_js__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_stats_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_stats_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui__ = __webpack_require__(27);
@@ -5965,7 +5965,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__geometry_Cube__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__rendering_gl_OpenGLRenderer__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__Camera__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__globals__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__ = __webpack_require__(69);
 
 
@@ -5981,20 +5981,32 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
     tesselations: 5,
-    color: [255, 0, 0],
+    color: '#ff0000',
+    shape: 'cube',
+    shader: 'lambert',
     'Load Scene': loadScene,
+    get Colorfv() {
+        let decCol = parseInt(this.color.slice(1), 16);
+        let r = (decCol >> 16) & 255;
+        let g = (decCol >> 8) & 255;
+        let b = decCol & 255;
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec4 */].fromValues(r / 255.0, g / 255.0, b / 255.0, 1);
+    }
 };
 let icosphere;
 let square;
-let cube;
+let cubeSeparate;
+let cubeCojoint;
 let prevTesselations = 5;
 function loadScene() {
     icosphere = new __WEBPACK_IMPORTED_MODULE_3__geometry_Icosphere__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec3 */].fromValues(0, 0, 0), 1, controls.tesselations);
     icosphere.create();
     square = new __WEBPACK_IMPORTED_MODULE_4__geometry_Square__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec3 */].fromValues(0, 0, 0));
     square.create();
-    cube = new __WEBPACK_IMPORTED_MODULE_5__geometry_Cube__["a" /* default */]();
-    cube.create();
+    cubeSeparate = new __WEBPACK_IMPORTED_MODULE_5__geometry_Cube__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec3 */].fromValues(0, 0, 0));
+    cubeSeparate.create();
+    cubeCojoint = new __WEBPACK_IMPORTED_MODULE_5__geometry_Cube__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec3 */].fromValues(0, 0, 0), true);
+    cubeCojoint.create();
 }
 function main() {
     // Initial display for framerate
@@ -6008,6 +6020,8 @@ function main() {
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
     gui.add(controls, 'tesselations', 0, 8).step(1);
     gui.addColor(controls, "color");
+    gui.add(controls, 'shape', ['cube', 'square', 'icosphere']);
+    gui.add(controls, 'shader', ['lambert', 'wave']);
     gui.add(controls, 'Load Scene');
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
@@ -6028,6 +6042,11 @@ function main() {
         new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(70)),
         new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(71)),
     ]);
+    const wave = new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(72)),
+        new __WEBPACK_IMPORTED_MODULE_9__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(73)),
+    ]);
+    let time = 0;
     // This function will be called every frame
     function tick() {
         camera.update();
@@ -6036,19 +6055,38 @@ function main() {
         renderer.clear();
         if (controls.tesselations != prevTesselations) {
             prevTesselations = controls.tesselations;
-            // icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
-            // icosphere.create();
-            cube = new __WEBPACK_IMPORTED_MODULE_5__geometry_Cube__["a" /* default */]();
-            cube.create();
+            icosphere = new __WEBPACK_IMPORTED_MODULE_3__geometry_Icosphere__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* vec3 */].fromValues(0, 0, 0), 1, prevTesselations);
+            icosphere.create();
         }
-        lambert.setGeometryColor(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec4 */].fromValues(controls.color[0] / 255, controls.color[1] / 255, controls.color[2] / 255, 1));
-        renderer.render(camera, lambert, [
-            // icosphere,
-            // square,
-            cube
-        ]);
+        lambert.setGeometryColor(controls.Colorfv);
+        wave.setTime(time);
+        let shader;
+        let cube;
+        switch (controls.shader) {
+            case 'wave':
+                shader = wave;
+                cube = cubeCojoint;
+                break;
+            case 'lambert':
+            default:
+                shader = lambert;
+                cube = cubeSeparate;
+                break;
+        }
+        switch (controls.shape) {
+            case 'square':
+                renderer.render(camera, shader, [square]);
+                break;
+            case 'icosphere':
+                renderer.render(camera, shader, [icosphere]);
+                break;
+            case 'cube':
+            default:
+                renderer.render(camera, shader, [cube]);
+                break;
+        }
         stats.end();
-        console.log(lambert.unifColor);
+        time++;
         // Tell the browser to call `tick` again whenever it renders a new frame
         requestAnimationFrame(tick);
     }
@@ -13061,9 +13099,9 @@ dat.utils.common);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
 
 
 
@@ -13219,9 +13257,9 @@ class Icosphere extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a"
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
 
 
 
@@ -13263,12 +13301,40 @@ class Square extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /*
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__globals__ = __webpack_require__(2);
 
 
-class Cube extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /* default */] {
+
+class Cube extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* default */] {
+    constructor(center, cojoint = false) {
+        super();
+        this.center = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec4 */].fromValues(center[0], center[1], center[2], 1);
+        this.cojoint = cojoint;
+    }
     create() {
+        if (!this.cojoint) {
+            // Cube with separated faces
+            this.createSeparateCube();
+        }
+        else {
+            // Cube with conjoint faces
+            this.createCojointCube();
+        }
+        this.generateIdx();
+        this.generatePos();
+        this.generateNor();
+        this.count = this.indices.length;
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.indices, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.positions, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufNor);
+        __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.normals, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
+        console.log("Created Cube");
+    }
+    createSeparateCube() {
         this.indices = new Uint32Array([0, 1, 2, 0, 2, 3,
             4, 5, 6, 4, 6, 7,
             8, 9, 10, 8, 10, 11,
@@ -13325,17 +13391,42 @@ class Cube extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /* d
             0, -1, 0, 0,
             0, -1, 0, 0,
         ]);
-        this.generateIdx();
-        this.generatePos();
-        this.generateNor();
-        this.count = this.indices.length;
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.bufIdx);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ELEMENT_ARRAY_BUFFER, this.indices, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].STATIC_DRAW);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ARRAY_BUFFER, this.bufPos);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ARRAY_BUFFER, this.positions, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].STATIC_DRAW);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ARRAY_BUFFER, this.bufNor);
-        __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].ARRAY_BUFFER, this.normals, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].STATIC_DRAW);
-        console.log("Created Cube");
+        for (let i = 0; i < 24; i++) {
+            this.positions[i * 4] += this.center[0];
+            this.positions[i * 4 + 1] += this.center[1];
+            this.positions[i * 4 + 2] += this.center[2];
+        }
+    }
+    createCojointCube() {
+        this.indices = new Uint32Array([0, 1, 2, 0, 2, 3,
+            1, 4, 5, 1, 5, 2,
+            4, 6, 7, 4, 7, 5,
+            6, 0, 3, 6, 3, 7,
+            3, 2, 5, 3, 5, 7,
+            0, 6, 4, 0, 4, 1]);
+        this.positions = new Float32Array([-1, -1, 1, 1,
+            1, -1, 1, 1,
+            1, 1, 1, 1,
+            -1, 1, 1, 1,
+            1, -1, -1, 1,
+            1, 1, -1, 1,
+            -1, -1, -1, 1,
+            -1, 1, -1, 1]);
+        this.normals = new Float32Array(this.positions.length);
+        function normalize(vec) {
+            let len = Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2) + Math.pow(vec[3], 2));
+            return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec4 */].fromValues(vec[0] / len, vec[1] / len, vec[2] / len, vec[3] / len);
+        }
+        for (let i = 0; i < 8; i++) {
+            let norm = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec4 */].fromValues(this.positions[i * 4], this.positions[i * 4 + 1], this.positions[i * 4 + 2], 0);
+            norm = normalize(norm);
+            this.normals.set(norm, i * 4);
+        }
+        for (let i = 0; i < 8; i++) {
+            this.positions[i * 4] += this.center[0];
+            this.positions[i * 4 + 1] += this.center[1];
+            this.positions[i * 4 + 2] += this.center[2];
+        }
     }
 }
 ;
@@ -13347,8 +13438,8 @@ class Cube extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /* d
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
 // In this file, `gl` is accessible because it is imported above
@@ -13369,10 +13460,12 @@ class OpenGLRenderer {
     render(camera, prog, drawables) {
         let model = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
         let viewProj = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        //let color = vec4.fromValues(Math.random(), Math.random(), Math.random(), 1);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].identity(model);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
         prog.setModelMatrix(model);
         prog.setViewProjMatrix(viewProj);
+        //prog.setGeometryColor(color);
         for (let drawable of drawables) {
             prog.draw(drawable);
         }
@@ -13387,7 +13480,7 @@ class OpenGLRenderer {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
 var CameraControls = __webpack_require__(35);
 
 class Camera {
@@ -16494,8 +16587,8 @@ module.exports = true;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
 var activeProgram = null;
@@ -16529,6 +16622,7 @@ class ShaderProgram {
         this.unifModelInvTr = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_ModelInvTr");
         this.unifViewProj = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_ViewProj");
         this.unifColor = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_Color");
+        this.unifTime = __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].getUniformLocation(this.prog, "u_Time");
     }
     use() {
         if (activeProgram !== this.prog) {
@@ -16558,6 +16652,12 @@ class ShaderProgram {
         this.use();
         if (this.unifColor !== -1) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniform4fv(this.unifColor, color);
+        }
+    }
+    setTime(time) {
+        this.use();
+        if (this.unifTime !== -1) {
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].uniform1f(this.unifTime, time);
         }
     }
     draw(d) {
@@ -16592,7 +16692,19 @@ module.exports = "#version 300 es\r\n\r\n//This is a vertex shader. While it is 
 /* 71 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\n\r\n// This is a fragment shader. If you've opened this file first, please\r\n// open and read lambert.vert.glsl before reading on.\r\n// Unlike the vertex shader, the fragment shader actually does compute\r\n// the shading of geometry. For every pixel in your program's output\r\n// screen, the fragment shader is run for every bit of geometry that\r\n// particular pixel overlaps. By implicitly interpolating the position\r\n// data passed into the fragment shader by the vertex shader, the fragment shader\r\n// can compute what color to apply to its pixel based on things like vertex\r\n// position, light position, and vertex color.\r\nprecision highp float;\r\n\r\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\r\n\r\n// These are the interpolated values out of the rasterizer, so you can't know\r\n// their specific values without knowing the vertices that contributed to them\r\nin vec4 fs_Nor;\r\nin vec4 fs_LightVec;\r\nin vec4 fs_Col;\r\n\r\nout vec4 out_Col; // This is the final output color that you will see on your\r\n                  // screen for the pixel that is currently being processed.\r\n\r\nvoid main()\r\n{\r\n    // Material base color (before shading)\r\n        vec4 diffuseColor = u_Color;\r\n\r\n        // Calculate the diffuse term for Lambert shading\r\n        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\r\n        // Avoid negative lighting values\r\n        // diffuseTerm = clamp(diffuseTerm, 0, 1);\r\n\r\n        float ambientTerm = 0.2;\r\n\r\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\r\n                                                            //to simulate ambient lighting. This ensures that faces that are not\r\n                                                            //lit by our point light are not completely black.\r\n\r\n        // Compute final shaded color\r\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);\r\n}\r\n"
+module.exports = "#version 300 es\r\n\r\n// This is a fragment shader. If you've opened this file first, please\r\n// open and read lambert.vert.glsl before reading on.\r\n// Unlike the vertex shader, the fragment shader actually does compute\r\n// the shading of geometry. For every pixel in your program's output\r\n// screen, the fragment shader is run for every bit of geometry that\r\n// particular pixel overlaps. By implicitly interpolating the position\r\n// data passed into the fragment shader by the vertex shader, the fragment shader\r\n// can compute what color to apply to its pixel based on things like vertex\r\n// position, light position, and vertex color.\r\nprecision highp float;\r\n\r\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\r\n\r\n// These are the interpolated values out of the rasterizer, so you can't know\r\n// their specific values without knowing the vertices that contributed to them\r\nin vec4 fs_Nor;\r\nin vec4 fs_LightVec;\r\nin vec4 fs_Col;\r\n\r\nout vec4 out_Col; // This is the final output color that you will see on your\r\n                  // screen for the pixel that is currently being processed.\r\n\r\nvoid main()\r\n{\r\n    // Material base color (before shading)\r\n        vec4 diffuseColor = u_Color;\r\n\r\n        // Calculate the diffuse term for Lambert shading\r\n        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\r\n        // Avoid negative lighting values\r\n        diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);\r\n\r\n        float ambientTerm = 0.2;\r\n\r\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\r\n                                                            //to simulate ambient lighting. This ensures that faces that are not\r\n                                                            //lit by our point light are not completely black.\r\n\r\n        // Compute final shaded color\r\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);\r\n}\r\n"
+
+/***/ }),
+/* 72 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nuniform mat4 u_Model;\r\nuniform mat4 u_ModelInvTr;\r\nuniform mat4 u_ViewProj;\r\nuniform float u_Time;\r\n\r\nin vec4 vs_Pos;\r\nin vec4 vs_Nor;\r\nin vec4 vs_Col;\r\n\r\nout vec4 fs_Pos;\r\nout vec4 fs_Nor;\r\nout vec4 fs_LightVec;\r\nout vec4 fs_Col;\r\n\r\nconst vec4 lightPos = vec4(5, 5, 3, 1);\r\n\r\nvoid main()\r\n{\r\n    fs_Col = vs_Col;\r\n\r\n    mat3 invTranspose = mat3(u_ModelInvTr);\r\n    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);\r\n\r\n\r\n    vec4 modelposition = u_Model * vs_Pos;\r\n\r\n    fs_LightVec = lightPos - modelposition;\r\n    modelposition += (normalize(fs_LightVec) * 0.4 + fs_Nor * 0.1) * clamp(cos(u_Time * 0.01 * 6.28318 - length(fs_LightVec) * 5.0 + 2.0), 0.0, 1.0) * 0.4;\r\n\r\n    fs_Pos = u_Model * vs_Pos;\r\n    gl_Position = u_ViewProj * modelposition;\r\n}\r\n"
+
+/***/ }),
+/* 73 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\r\n\r\nprecision highp float;\r\n\r\nuniform vec4 u_Color;\r\nuniform float u_Time;\r\n\r\nin vec4 fs_Pos;\r\nin vec4 fs_Nor;\r\nin vec4 fs_LightVec;\r\n\r\nout vec4 out_Col;\r\n\r\nvoid main()\r\n{\r\n    float gradTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\r\n\r\n    float blue = (0.5 + 0.5 * cos(6.28318 * (u_Time * 0.01))) * clamp(gradTerm, 0.0, 1.0);\r\n    float green = (0.5 + 0.5 * cos(6.28318 * (u_Time * 0.02))) * blue;\r\n\r\n    vec4 diffuseColor = vec4(-clamp(gradTerm, -1.0, 0.0), green, blue, 1.0);\r\n    float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\r\n\r\n    float lightIntensity = clamp(diffuseTerm, 0.0, 1.0) + 0.2;\r\n\r\n\r\n    //vec4 spreadDir = vec4(1, 0, 0, 0);\r\n    //vec4 planeCenter = vec4(-1, 0, 0, 1);\r\n    vec4 spreadDir = normalize(fs_LightVec);\r\n    vec4 planeCenter = vec4(5, 5, 3, 1);\r\n    float stripe = 0.5 + 0.5 * pow(clamp(cos(dot(fs_Pos - planeCenter, spreadDir) * 100.0), 0.0, 1.0), 10.0);\r\n\r\n    out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a) * vec4(vec3(stripe), 1);\r\n}"
 
 /***/ })
 /******/ ]);
