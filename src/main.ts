@@ -1,8 +1,9 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -12,11 +13,24 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
+  color: '#ff0000',
+  shape: 'cube',
+  shader: 'lambert',
   'Load Scene': loadScene, // A function pointer, essentially
+  
+  get Colorfv() {
+    let decCol = parseInt(this.color.slice(1), 16);
+    let r = (decCol >> 16) & 255;
+    let g = (decCol >> 8) & 255;
+    let b = decCol & 255;
+    return vec4.fromValues(r / 255.0, g / 255.0, b / 255.0, 1);
+  }
 };
 
 let icosphere: Icosphere;
 let square: Square;
+let cubeSeparate: Cube;
+let cubeCojoint: Cube;
 let prevTesselations: number = 5;
 
 function loadScene() {
@@ -24,6 +38,10 @@ function loadScene() {
   icosphere.create();
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
+  cubeSeparate = new Cube(vec3.fromValues(0, 0, 0));
+  cubeSeparate.create();
+  cubeCojoint = new Cube(vec3.fromValues(0, 0, 0), true);
+  cubeCojoint.create();
 }
 
 function main() {
@@ -38,6 +56,9 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
+  gui.addColor(controls, "color");
+  gui.add(controls, 'shape', ['cube', 'square', 'icosphere']);
+  gui.add(controls, 'shader', ['lambert', 'wave']);
   gui.add(controls, 'Load Scene');
 
   // get canvas and webgl context
@@ -63,24 +84,45 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
+  
+  const wave = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/wave-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/wave-frag.glsl')),
+  ]);
 
+  let time = 0;
   // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, lambert, [
-      icosphere,
-      // square,
-    ]);
+
+    lambert.setGeometryColor(controls.Colorfv);
+    wave.setTime(time);
+
+    let shader : ShaderProgram;
+    let cube : Cube;
+    switch(controls.shader) {
+      case 'wave':  shader = wave; cube = cubeCojoint; break;
+      case 'lambert':
+      default:  shader = lambert; cube = cubeSeparate; break;
+    }
+    switch(controls.shape) {
+      case 'square':  renderer.render(camera, shader, [square]); break;
+      case 'icosphere': renderer.render(camera, shader, [icosphere]); break;
+      case 'cube':
+      default:  renderer.render(camera, shader, [cube]); break;
+    }
     stats.end();
+    time++;
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
